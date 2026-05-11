@@ -10,6 +10,11 @@ def test_tokenize_is_case_insensitive() -> None:
     assert tokenize(text) == ["good", "good", "friends"]
 
 
+def test_tokenize_handles_punctuation() -> None:
+    text = "Hello, world! don't-stop"
+    assert tokenize(text) == ["hello", "world", "don't", "stop"]
+
+
 def test_build_inverted_index_stores_freq_and_positions() -> None:
     pages = [
         {
@@ -44,6 +49,19 @@ def test_build_inverted_index_stores_freq_and_positions() -> None:
 
     assert index["friends"]["doc_freq"] == 2
     assert index["friends"]["pages"]["https://quotes.toscrape.com/page/2"]["positions"] == [0]
+
+
+def test_build_inverted_index_falls_back_to_body_text() -> None:
+    pages = [
+        {
+            "url": "u1",
+            "html": "<html><body>Plain body content only</body></html>",
+        }
+    ]
+
+    index = build_inverted_index(pages)
+    assert "plain" in index
+    assert index["plain"]["pages"]["u1"]["freq"] == 1
 
 
 def test_index_summary_counts_terms_and_postings() -> None:

@@ -36,6 +36,11 @@ def test_print_word_returns_none_for_empty_input() -> None:
     assert print_word(index=index, word="   ") is None
 
 
+def test_print_word_returns_none_for_missing_word() -> None:
+    index = _sample_index()
+    assert print_word(index=index, word="missing") is None
+
+
 def test_find_query_single_term() -> None:
     index = _sample_index()
     assert find_query(index=index, terms=["good"]) == ["u1", "u2"]
@@ -49,3 +54,13 @@ def test_find_query_multi_term_intersection() -> None:
 def test_find_query_returns_empty_if_any_term_missing() -> None:
     index = _sample_index()
     assert find_query(index=index, terms=["good", "missing"]) == []
+
+
+def test_find_query_is_case_insensitive_and_normalizes_symbols() -> None:
+    index = _sample_index()
+    assert find_query(index=index, terms=["GOOD,", "friends!"]) == ["u1"]
+
+
+def test_find_query_returns_empty_for_empty_query() -> None:
+    index = _sample_index()
+    assert find_query(index=index, terms=["   "]) == []
