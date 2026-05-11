@@ -28,7 +28,8 @@ class Crawler:
         politeness_seconds: float = 6.0,
         timeout: float = 10.0,
     ) -> None:
-        self.base_url = base_url.rstrip("/")
+        normalized_base_url = self._normalize_url(base_url)
+        self.base_url = normalized_base_url or base_url.rstrip("/")
         parsed = urlparse(self.base_url)
         self.allowed_domain = parsed.netloc
         self.politeness_seconds = politeness_seconds

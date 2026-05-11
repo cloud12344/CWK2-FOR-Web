@@ -56,7 +56,7 @@ def test_crawl_respects_max_pages() -> None:
     html_page_2 = "<html><body><p>page 1</p></body></html>"
 
     responses = {
-        "https://quotes.toscrape.com": html_page_1,
+        "https://quotes.toscrape.com/": html_page_1,
         "https://quotes.toscrape.com/page/1": html_page_2,
         "https://quotes.toscrape.com/page/2": html_page_2,
     }
@@ -65,7 +65,7 @@ def test_crawl_respects_max_pages() -> None:
 
     pages = crawler.crawl(max_pages=2)
     assert len(pages) == 2
-    assert pages[0].url == "https://quotes.toscrape.com"
+    assert pages[0].url == "https://quotes.toscrape.com/"
 
 
 def test_crawl_skips_failed_pages_and_continues() -> None:
@@ -89,4 +89,4 @@ def test_crawl_skips_failed_pages_and_continues() -> None:
     urls = [p.url for p in pages]
 
     assert "https://quotes.toscrape.com/page/1" not in urls
-    assert "https://quotes.toscrape.com" in urls
+    assert "https://quotes.toscrape.com/" in urls
