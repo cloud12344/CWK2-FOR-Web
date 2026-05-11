@@ -9,6 +9,7 @@ from typing import Any, Dict
 
 from crawler import crawl_site
 from indexer import build_inverted_index, index_summary
+from search import find_query, print_word
 
 DEFAULT_BASE_URL = "https://quotes.toscrape.com/"
 DEFAULT_INDEX_PATH = Path("data") / "index.json"
@@ -50,14 +51,50 @@ def handle_load(args: argparse.Namespace) -> None:
 
 
 def handle_print(args: argparse.Namespace) -> None:
-    print(f"print command placeholder. Requested word: {args.word}")
+    if not args.index_path.exists():
+        print(f"Index file not found: {args.index_path}. Run build first.")
+        return
+
+    data = json.loads(args.index_path.read_text(encoding="utf-8"))
+    index = data.get("index", {})
+
+    result = print_word(index=index, word=args.word)
+    if result is None:
+        print("Please provide a non-empty word.")
+        return
+
+    if not result:
+        print(f"Word not found in index: {args.word.lower()}")
+        return
+
+    output = {
+        "word": args.word.lower(),
+        "doc_freq": result["doc_freq"],
+        "pages": result["pages"],
+    }
+    print(json.dumps(output, ensure_ascii=False, indent=2))
 
 
 def handle_find(args: argparse.Namespace) -> None:
     if not args.terms:
         print("Empty query is not allowed.")
         return
-    print(f"find command placeholder. Requested terms: {' '.join(args.terms)}")
+
+    if not args.index_path.exists():
+        print(f"Index file not found: {args.index_path}. Run build first.")
+        return
+
+    data = json.loads(args.index_path.read_text(encoding="utf-8"))
+    index = data.get("index", {})
+
+    urls = find_query(index=index, terms=args.terms)
+    if not urls:
+        print("No matching pages found.")
+        return
+
+    print("Matching pages:")
+    for url in urls:
+        print(f"- {url}")
 
 
 def build_parser() -> argparse.ArgumentParser:
