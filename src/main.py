@@ -8,27 +8,33 @@ from pathlib import Path
 from typing import Any, Dict
 
 from crawler import crawl_site
+from indexer import build_inverted_index, index_summary
 
 DEFAULT_BASE_URL = "https://quotes.toscrape.com/"
 DEFAULT_INDEX_PATH = Path("data") / "index.json"
 
 
 def handle_build(args: argparse.Namespace) -> None:
-    """Stage 1 build command: crawl only, save raw page dump."""
+    """Stage 2 build command: crawl, build inverted index, and save."""
     pages = crawl_site(base_url=args.base_url, max_pages=args.max_pages)
+    inverted_index = build_inverted_index(pages)
+    distinct_terms, total_postings = index_summary(inverted_index)
 
     payload: Dict[str, Any] = {
-        "stage": "stage-1-crawl-only",
+        "stage": "stage-2-index-built",
         "base_url": args.base_url,
         "page_count": len(pages),
-        "pages": pages,
+        "term_count": distinct_terms,
+        "posting_count": total_postings,
+        "index": inverted_index,
     }
 
     args.index_path.parent.mkdir(parents=True, exist_ok=True)
     args.index_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    print(f"Build completed (stage 1). Crawled pages: {len(pages)}")
-    print(f"Saved crawl output to: {args.index_path}")
+    print(f"Build completed (stage 2). Crawled pages: {len(pages)}")
+    print(f"Indexed terms: {distinct_terms}, postings: {total_postings}")
+    print(f"Saved index to: {args.index_path}")
 
 
 def handle_load(args: argparse.Namespace) -> None:
@@ -40,6 +46,7 @@ def handle_load(args: argparse.Namespace) -> None:
     print("Load completed.")
     print(f"File: {args.index_path}")
     print(f"Stored pages: {data.get('page_count', 0)}")
+    print(f"Stored terms: {data.get('term_count', 0)}")
 
 
 def handle_print(args: argparse.Namespace) -> None:
